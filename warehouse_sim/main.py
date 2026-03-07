@@ -98,7 +98,7 @@ def run_graphical(sim: Simulation) -> None:
             sim.grid.create_obstacle("OBS1", x=5, y=5)
             obstacle_inserted = True
 
-        if sim.timestep == 301 and not obstacle_removed and obstacle_inserted:
+        if sim.timestep == 8 and not obstacle_removed and obstacle_inserted:
             log.info("[t=%d] *** Removing obstacle OBS1 ***", sim.timestep)
             sim.grid.remove_obstacle("OBS1")
             obstacle_removed = True
@@ -133,7 +133,7 @@ def run_headless(sim: Simulation) -> None:
             sim.grid.create_obstacle("OBS1", x=5, y=3)
             obstacle_inserted = True
 
-        if sim.timestep == 301 and not obstacle_removed and obstacle_inserted:
+        if sim.timestep == 8 and not obstacle_removed and obstacle_inserted:
             log.info("[t=%d] Removing obstacle OBS1", sim.timestep)
             sim.grid.remove_obstacle("OBS1")
             obstacle_removed = True
