@@ -35,7 +35,8 @@ class CollisionResolver:
         for cell, candidates in intent.items():
             if len(candidates) <= 1:
                 continue
-            candidates.sort(key=lambda f: f.effective_priority, reverse=True)
+            #candidates.sort(key=lambda f: f.effective_priority, reverse=True)
+            candidates.sort(key=lambda f: (heuristic(f.current_cell, f.goal_cell) if f.goal_cell else float('inf')) - f.wait_steps)
             winner = candidates[0]
             for loser in candidates[1:]:
                 logger.debug(
@@ -73,11 +74,17 @@ class CollisionResolver:
                     continue
                 checked.add(pair)
 
-                high, low = (
-                    (fl_a, fl_b)
-                    if fl_a.effective_priority >= fl_b.effective_priority
-                    else (fl_b, fl_a)
-                )
+                #high, low = (
+                    #(fl_a, fl_b)
+                    #if fl_a.effective_priority >= fl_b.effective_priority
+                    #else (fl_b, fl_a)
+                #)
+                # Calculamos la heurística de ambos (distancia al objetivo - impaciencia)
+                h_a = (heuristic(fl_a.current_cell, fl_a.goal_cell) if fl_a.goal_cell else float('inf')) - fl_a.wait_steps
+                h_b = (heuristic(fl_b.current_cell, fl_b.goal_cell) if fl_b.goal_cell else float('inf')) - fl_b.wait_steps
+                
+                # El de MENOR heurística (más cerca) es el 'high' (el que tiene prioridad y no se mueve)
+                high, low = (fl_a, fl_b) if h_a <= h_b else (fl_b, fl_a)
                 logger.debug(
                     "Collision (swap): %s waits, %s replans",
                     high.name, low.name,

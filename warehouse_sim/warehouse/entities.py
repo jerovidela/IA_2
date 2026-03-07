@@ -96,8 +96,10 @@ class Forklift:
         if not self.path:
             return False
 
-        next_cell = self.path[0]
-
+        #next_cell = self.path[0]
+        # 1. Obtener coordenadas de la ruta y consultar la celda real en el Grid
+        next_cell_memoria = self.path[0]
+        next_cell = self._grid.get_cell(next_cell_memoria.pos_x, next_cell_memoria.pos_y)
         if self.detect_obstacle(next_cell):
             self.blocked_steps += 1
             self.wait_steps += 1
@@ -132,15 +134,30 @@ class Forklift:
                 return "no_path"
 
         if self.path:
-            next_cell = self.path[0]
+            next_cell_memoria = self.path[0]
+            next_cell = self._grid.get_cell(next_cell_memoria.pos_x, next_cell_memoria.pos_y)
+            #next_cell = self.path[0]
             if self.detect_obstacle(next_cell):
-                self.blocked_steps += 1
+               # self.blocked_steps += 1
                 self.wait_steps += 1
-                if self.blocked_steps >= REPLAN_THRESHOLD:
+                if not next_cell.is_walkable:
                     self.blocked_steps = 0
-                    self._penalize_cell(next_cell, extra_weight=50.0)
                     self.plan_path(self.current_cell, self.goal_cell, heuristic)
+                
+                # B) Si es transitable (es otro montacargas): usar paciencia (REPLAN_THRESHOLD)
+                else:
+                    self.blocked_steps += 1
+                    if self.blocked_steps >= REPLAN_THRESHOLD:
+                        self.blocked_steps = 0
+                        self._penalize_cell(next_cell, extra_weight=50.0)
+                        self.plan_path(self.current_cell, self.goal_cell, heuristic)
+                        
                 return "blocked"
+                #if self.blocked_steps >= REPLAN_THRESHOLD:
+                    #self.blocked_steps = 0
+                    #self._penalize_cell(next_cell, extra_weight=50.0)
+                    #self.plan_path(self.current_cell, self.goal_cell, heuristic)
+                #return "blocked"
 
         moved = self.move()
         return "moved" if moved else "waiting"

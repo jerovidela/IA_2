@@ -112,7 +112,8 @@ class ChargingStationCell(Cell):
 
 class ObstacleCell(Cell):
     def __init__(self, pos_x: int, pos_y: int) -> None:
-        super().__init__(pos_x, pos_y, CellType.OBSTACLE, movement_weight=float('inf'))
+        super().__init__(pos_x, pos_y, CellType.OBSTACLE, movement_weight=1.0)
+        #super().__init__(pos_x, pos_y, CellType.OBSTACLE, movement_weight=float('inf'))
 
     def set_occupant(self, obj: Optional[object]) -> None:
         from warehouse.entities import Obstacle

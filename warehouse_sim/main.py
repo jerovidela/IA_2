@@ -80,7 +80,7 @@ def run_graphical(sim: Simulation) -> None:
         run_headless(sim)
         return
 
-    renderer = WarehouseRenderer(sim.grid, cell_size=62, fps=3)
+    renderer = WarehouseRenderer(sim.grid, cell_size=62, fps=2)
     renderer.init()
 
     obstacle_inserted = False
