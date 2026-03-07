@@ -104,10 +104,6 @@ def run_graphical(sim: Simulation) -> None:
             log.info("[t=%d] *** Removing obstacle OBS1 ***", sim.timestep)
             sim.grid.remove_obstacle("OBS1")
             obstacle_removed = True
-            for fl in sim.forklifts:
-                if fl.goal_cell and fl.current_cell != fl.goal_cell:
-                    fl.path = []
-                    fl.penalized_cells.clear()
 
         statuses = sim.step()
         renderer.render(sim, statuses)
