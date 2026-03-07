@@ -14,8 +14,8 @@ Implementa el algoritmo de búsqueda de caminos óptimos. Está diseñado para i
 
 * `grid`: Referencia a la instancia actual de `Grid`.
 * `heuristic`: Función heurística inyectada (ej. `manhattan_distance`).
-* `penalized_cells` (Dict): Diccionario que mapea objetos `Cell` a un peso extra temporal (`float`), usado para evitar celdas con posibles colisiones temporales.
-* `known_obstacles` (Set): Conjunto de objetos `Cell` que el agente descubrió como bloqueos físicos insalvables.
+* `penalized_cells` (Dict): Diccionario que mapea objetos `Cell` a un peso extra temporal (`float`), usado para evitar celdas con posibles colisiones temporales. (opcional) 
+* `known_obstacles` (Set): Conjunto de objetos `Cell` que el agente descubrió como bloqueos físicos insalvables. (opcional)
 
 **Métodos:**
 
