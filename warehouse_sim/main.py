@@ -43,6 +43,8 @@ def build_warehouse() -> Grid:
 
 
 def setup_simulation(grid: Grid) -> Simulation:
+    # Esto debe cambiarse por un for que instancie todos los carros y asigne obtetivos.
+    # Se deben hacer diccionarios de configuración para los carros y objetivos, y luego iterar sobre ellos para crear los carros y asignarles objetivos.
     sim = Simulation(grid=grid, heuristic=manhattan_distance, max_steps=50)
 
     fl_alpha = grid.create_forklift("Alpha")
