@@ -24,7 +24,6 @@ def build_warehouse() -> Grid:
     grid = Grid(width=13, height=11)
 
     grid.create_charging_station("CS_West", x=0,  y=5)
-    grid.create_charging_station("CS_East", x=12, y=5)
     block_positions = [
         (2, 1), (6, 1), (10, 1),
         (2, 6), (6, 6), (10, 6)
@@ -48,28 +47,14 @@ def setup_simulation(grid: Grid) -> Simulation:
     sim = Simulation(grid=grid, heuristic=manhattan_distance, max_steps=50)
 
     fl_alpha = grid.create_forklift("Alpha")
-    fl_beta  = grid.create_forklift("Beta")
-    fl_teta = grid.create_forklift("Teta")
-    fl_gamma = grid.create_forklift("Gamma", x=5, y=10)
+
 
     log.info("Alpha spawned at (%d,%d)", fl_alpha.current_cell.pos_x, fl_alpha.current_cell.pos_y)
-    log.info("Beta  spawned at (%d,%d)", fl_beta.current_cell.pos_x,  fl_beta.current_cell.pos_y)
-    log.info("Teta  spawned at (%d,%d)", fl_teta.current_cell.pos_x,  fl_teta.current_cell.pos_y)
-    log.info("Gamma spawned at (%d,%d)", fl_gamma.current_cell.pos_x, fl_gamma.current_cell.pos_y)
+    goal = "SH48"
+    sim.assign_goal("Alpha", goal)
 
-    sim.assign_goal("Alpha", "SH12")
-    sim.assign_goal("Beta",  "SH03")
-    sim.assign_goal("Teta",  "SH26")
-    sim.assign_goal("Gamma", "SH09")
-
-    log.info("Alpha goal → shelf SH12 → cell (%d,%d)",
-             grid.resolve_goal("SH12").pos_x, grid.resolve_goal("SH12").pos_y)
-    log.info("Beta  goal → shelf SH03 → cell (%d,%d)",
-             grid.resolve_goal("SH03").pos_x, grid.resolve_goal("SH03").pos_y)
-    log.info("Teta  goal → shelf SH26 → cell (%d,%d)",
-             grid.resolve_goal("SH26").pos_x, grid.resolve_goal("SH26").pos_y)
-    log.info("Gamma goal → shelf SH09 → cell (%d,%d)",
-             grid.resolve_goal("SH09").pos_x, grid.resolve_goal("SH09").pos_y)
+    log.info("Alpha goal → shelf goal → cell (%d,%d)",
+             grid.resolve_goal(goal).pos_x, grid.resolve_goal(goal).pos_y)
 
     return sim
 
@@ -95,7 +80,7 @@ def run_graphical(sim: Simulation) -> None:
             log.info("User requested quit.")
             break
 
-        if sim.timestep == 1 and not obstacle_inserted:
+        if sim.timestep == 1000 and not obstacle_inserted:
             log.info("[t=%d] *** Inserting dynamic obstacle OBS1 at (5,3) ***", sim.timestep)
             sim.grid.create_obstacle("OBS1", x=5, y=5)
             obstacle_inserted = True
@@ -126,7 +111,7 @@ def run_headless(sim: Simulation) -> None:
     log.info("Headless simulation started.")
 
     while sim.timestep < sim.max_steps:
-        if sim.timestep == 1 and not obstacle_inserted:
+        if sim.timestep == 1000 and not obstacle_inserted:
             log.info("[t=%d] Inserting dynamic obstacle OBS1 at (5,3)", sim.timestep)
             sim.grid.create_obstacle("OBS1", x=5, y=3)
             obstacle_inserted = True
