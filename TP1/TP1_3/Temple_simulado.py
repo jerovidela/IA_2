@@ -4,7 +4,7 @@ import os
 import itertools 
 import random
 import math
-import time # NUEVO: Para la simulación visual
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -12,16 +12,14 @@ from warehouse.grid import Grid
 from pathfinding.astar import AStar
 from pathfinding.heuristics import manhattan_distance
 
-# NUEVOS IMPORTS: Traemos el montacargas y el simulador
 from warehouse.entities import Forklift
-from simulation.simulation import Simulation # Ajustá este import si tu carpeta simulation se llama distinto
+from simulation.simulation import Simulation 
 
 CHARGING_STATION_POS = (0, 5)
 CHARGING_STATION_ID = "CS"
 
 def build_warehouse() -> Grid:
     grid = Grid(width=13, height=11)
-    # Dejamos solo una estación y la llamamos "CS"
     grid.create_charging_station("CS", x=0,  y=5) 
     
     block_positions = [
@@ -155,78 +153,57 @@ def optimizar_ruta_ts(ruta_inicial: list[str], matriz: dict, alfa: float = 0.95,
         
     return mejor_ruta, mejor_costo
 
-# ==========================================
-# NUEVO: MÓDULO DE SIMULACIÓN VISUAL
-# ==========================================
 def simular_recorrido(ruta: list[str], titulo: str):
     """
     Ejecuta la simulación gráfica de un montacargas siguiendo una ruta específica.
     """
     print(f"\n--- Preparando simulación: {titulo} ---")
     
-    # 1. Necesitamos un almacén "limpio" para cada simulación
     grid_sim = build_warehouse()
     
-    # 2. Aumentamos max_steps porque un recorrido completo lleva muchos pasos
     sim = Simulation(grid=grid_sim, heuristic=manhattan_distance, max_steps=1500)
     
-    # 3. Creamos nuestro montacargas en la zona de carga (x=0, y=5)
     robot = sim.grid.create_forklift("Robot_Picking", x=0, y=5)
     
-    # Clonamos la ruta para poder ir borrando los estantes a medida que llegamos
     metas_pendientes = list(ruta)
-    metas_pendientes.append((0, 5)) # Le pasamos la coordenada exacta de la "C"
-    # Le damos la primera instrucción
+    metas_pendientes.append((0, 5))
     if metas_pendientes:
         meta_actual = metas_pendientes.pop(0)
         sim.assign_goal("Robot_Picking", meta_actual)
         
-    # 4. Inicializamos la ventana gráfica
     try:
         from rendering.renderer import WarehouseRenderer
-        # fps=5 hace que se mueva rápido. Si querés que vaya más lento, bajalo a 2 o 3.
         renderer = WarehouseRenderer(sim.grid, cell_size=62, fps=5) 
         renderer.init()
     except ImportError:
         print("Error: No se encontró Pygame. Imposible mostrar la simulación gráfica.")
         return
 
-    # 5. El Bucle de Control Visual
     while sim.timestep < sim.max_steps:
         if renderer.should_quit():
             break
             
-        # Avanzamos un "tick" en el tiempo
         statuses = sim.step()
         renderer.render(sim, statuses)
         
-        # Lógica supervisora: Si el robot llegó a la meta actual
         if robot.current_cell == robot.goal_cell:
             if metas_pendientes:
-                # Le asignamos el siguiente estante de la lista
                 meta_actual = metas_pendientes.pop(0)
                 sim.assign_goal("Robot_Picking", meta_actual)
             elif sim.all_done():
-                # Si ya no hay metas y terminó, cerramos la simulación
                 print(f"¡Recorrido '{titulo}' completado en {sim.timestep} pasos de tiempo!")
-                time.sleep(2) # Pausa de 2 segundos para que veas que terminó
+                time.sleep(2)
                 break
                 
     renderer.quit()
 
 
-# ==========================================
-# BLOQUE PRINCIPAL DE EJECUCIÓN
-# ==========================================
 if __name__ == "__main__":
 
     mi_almacen = build_warehouse()
     matriz_cache = precalcular_distancias(mi_almacen)
     todas_las_ordenes = leer_ordenes('ordenes.csv')
     
-    # ---------------------------------------------------------
-    # MODO 1: EL MICROSCOPIO (Analizamos solo la primera orden)
-    # ---------------------------------------------------------
     print("\n" + "="*50)
     print("--- INICIANDO TEMPLE SIMULADO (MODO 1: INDIVIDUAL) ---")
     
@@ -243,19 +220,12 @@ if __name__ == "__main__":
     mejora_m1 = ((costo_inicial_m1 - costo_optimo_m1) / costo_inicial_m1) * 100
     print(f"Mejora del recorrido: {mejora_m1:.2f}%")
 
-    # ---- NUEVO: LANZAMOS LAS SIMULACIONES DE DEMOSTRACIÓN ----
- # --- SHOWTIME ---
     print("\n=== INICIANDO SIMULACIONES VISUALES ===")
         
-        # Simulación 1: El desastre sin optimizar
     simular_recorrido(orden_prueba, titulo="Ruta Original (Ineficiente)")
         
-        # Simulación 2: La obra de arte optimizada
     simular_recorrido(ruta_optima_m1, titulo="Ruta Optimizada (Temple Simulado)")
 
-    # ---------------------------------------------------------
-    # MODO 2: EL MONTECARLO (Evaluación masiva del almacén)
-    # ---------------------------------------------------------
     respuesta = input("\n¿Deseas correr la Simulación Montecarlo completa? (s/n): ")
     if respuesta.lower() == 's':
         print("\n" + "="*50)
