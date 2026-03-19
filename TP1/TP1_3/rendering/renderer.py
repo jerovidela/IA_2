@@ -7,12 +7,26 @@ if TYPE_CHECKING:
     from warehouse.cell import Cell
     from simulation.simulation import Simulation
 
-COLOR_BG          = (30,  30,  35)   # dark background
-COLOR_GRID_LINE   = (50,  50,  60)
-COLOR_AISLE       = (60,  65,  75)
-COLOR_SHELF       = (90,  55,  30)   # brown
-COLOR_OBSTACLE    = (200, 50,  50)   # red
-COLOR_CHARGING    = (40, 120,  80)   # green
+# COLOR_BG          = (30,  30,  35)   # dark background
+# COLOR_GRID_LINE   = (50,  50,  60)
+# COLOR_AISLE       = (60,  65,  75)
+# COLOR_SHELF       = (90,  55,  30)   # brown
+# COLOR_OBSTACLE    = (200, 50,  50)   # red
+# COLOR_CHARGING    = (40, 120,  80)   # green
+
+COLOR_PATH        = (180, 220, 255, 120)  # translucent light blue
+COLOR_GOAL_MARKER = (255, 255, 100)
+COLOR_TEXT        = (220, 220, 230)
+COLOR_PANEL_BG    = (20,  20,  25)
+COLOR_BG          = (240, 240, 245)  # fondo blanco/gris claro
+COLOR_GRID_LINE   = (180, 180, 190)
+COLOR_AISLE       = (210, 215, 220)
+COLOR_SHELF       = (180, 130,  70)  # marrón más claro
+COLOR_OBSTACLE    = (220,  80,  80)  # rojo
+COLOR_CHARGING    = ( 80, 180, 120)  # verde
+# COLOR_PANEL_BG    = (200, 200, 210)  # panel lateral claro
+# COLOR_TEXT        = ( 30,  30,  40)  # texto oscuro (importante cambiarlo)
+COLOR_AT_GOAL     = (50, 200, 100)
 COLOR_FORKLIFT    = [                 # distinct colours per forklift
     (255, 200,  50),  # yellow
     ( 80, 160, 255),  # blue
@@ -20,11 +34,6 @@ COLOR_FORKLIFT    = [                 # distinct colours per forklift
     (160, 255, 160),  # mint
     (220,  80, 220),  # purple
 ]
-COLOR_PATH        = (180, 220, 255, 120)  # translucent light blue
-COLOR_GOAL_MARKER = (255, 255, 100)
-COLOR_TEXT        = (220, 220, 230)
-COLOR_PANEL_BG    = (20,  20,  25)
-COLOR_AT_GOAL     = (50, 200, 100)
 
 
 class WarehouseRenderer:
@@ -65,8 +74,8 @@ class WarehouseRenderer:
         screen_h = self.grid.height * self.cell_size
         self._screen = self._pygame.display.set_mode((screen_w, screen_h))
         self._clock = self._pygame.time.Clock()
-        self._font_large = self._pygame.font.SysFont("monospace", 15, bold=True)
-        self._font_small  = self._pygame.font.SysFont("monospace", 12)
+        self._font_large = self._pygame.font.SysFont("monospace", 25, bold=True)
+        self._font_small  = self._pygame.font.SysFont("monospace", 16)
         self._path_surface = self._pygame.Surface(
             (self.grid.width * self.cell_size, self.grid.height * self.cell_size),
             self._pygame.SRCALPHA,

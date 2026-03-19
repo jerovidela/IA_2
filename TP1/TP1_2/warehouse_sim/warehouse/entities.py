@@ -1,8 +1,10 @@
 from __future__ import annotations
 import random
-from typing import List, Optional, TYPE_CHECKING 
+from typing import List, Optional, TYPE_CHECKING
+import logging
 
-
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from warehouse.cell import Cell
@@ -12,6 +14,8 @@ if TYPE_CHECKING:
 
 PRIORITY_INCREMENT: float = 0.1
 REPLAN_THRESHOLD: int = 3
+PENALIDAD_INICIAL: float = 100.0
+DECAIMIENTO_POR_TICK: float = 10.0
 
 class Shelf:
     def __init__(self, name: str, cell: "Cell") -> None:
@@ -53,6 +57,8 @@ class Forklift:
         self._grid: Optional["Grid"] = None
         self._skipping_turn: bool = False
         self.known_obstacles: set["Cell"] = set()
+        self.ticks: int = 0
+        self.dynamic_obstacles: dict["Cell", int] = {}
 
     @property
     def effective_priority(self) -> float:
@@ -80,8 +86,9 @@ class Forklift:
 
     def detect_obstacle(self, next_cell: "Cell") -> bool:
         if not next_cell.is_walkable:
-            self.known_obstacles.add(next_cell)
-            self._penalize_cell(next_cell, extra_weight=float('inf'))
+            for cell in self.dynamic_obstacles:
+                self.dynamic_obstacles[cell] = self.ticks
+            self.dynamic_obstacles[next_cell] = self.ticks
             return True
         from warehouse.entities import Forklift as _Forklift
         if isinstance(next_cell.occupant, _Forklift) and next_cell.occupant is not self:
@@ -91,6 +98,17 @@ class Forklift:
     def _penalize_cell(self, cell: "Cell", extra_weight: float) -> None:
         current = self.penalized_cells.get(cell, 0.0)
         self.penalized_cells[cell] = current + extra_weight
+
+    def _decay_dynamic_obstacles(self) -> None:
+        """Recalcula las penalizaciones por decaimiento en cada tick."""
+        for cell, tick_descubrimiento in list(self.dynamic_obstacles.items()):
+            tiempo_transcurrido = self.ticks - tick_descubrimiento
+            penalidad = max(0.0, PENALIDAD_INICIAL - (tiempo_transcurrido * DECAIMIENTO_POR_TICK))
+            if penalidad > 0:
+                self.penalized_cells[cell] = penalidad
+            else:
+                del self.dynamic_obstacles[cell]
+                self.penalized_cells.pop(cell, None)
 
     def move(self) -> bool:
         if not self.path:
@@ -116,6 +134,7 @@ class Forklift:
         return True
 
     def step(self, heuristic: "HeuristicFn") -> str:
+        self.ticks += 1
         if self.goal_cell is None:
             return "idle"
 
@@ -126,6 +145,11 @@ class Forklift:
         if getattr(self, '_skipping_turn', False):
             self._skipping_turn = False
             return "waiting"
+        
+        penalties_before = dict(self.penalized_cells)
+        self._decay_dynamic_obstacles()
+        if self.penalized_cells != penalties_before and self.path:
+            self.plan_path(self.current_cell, self.goal_cell, heuristic)
 
         if not self.path:
             planned = self.plan_path(self.current_cell, self.goal_cell, heuristic)
@@ -136,28 +160,18 @@ class Forklift:
         if self.path:
             next_cell_memoria = self.path[0]
             next_cell = self._grid.get_cell(next_cell_memoria.pos_x, next_cell_memoria.pos_y)
-            #next_cell = self.path[0]
             if self.detect_obstacle(next_cell):
-               # self.blocked_steps += 1
                 self.wait_steps += 1
                 if not next_cell.is_walkable:
                     self.blocked_steps = 0
                     self.plan_path(self.current_cell, self.goal_cell, heuristic)
-                
-                # B) Si es transitable (es otro montacargas): usar paciencia (REPLAN_THRESHOLD)
                 else:
                     self.blocked_steps += 1
                     if self.blocked_steps >= REPLAN_THRESHOLD:
                         self.blocked_steps = 0
                         self._penalize_cell(next_cell, extra_weight=50.0)
                         self.plan_path(self.current_cell, self.goal_cell, heuristic)
-                        
                 return "blocked"
-                #if self.blocked_steps >= REPLAN_THRESHOLD:
-                    #self.blocked_steps = 0
-                    #self._penalize_cell(next_cell, extra_weight=50.0)
-                    #self.plan_path(self.current_cell, self.goal_cell, heuristic)
-                #return "blocked"
 
         moved = self.move()
         return "moved" if moved else "waiting"
