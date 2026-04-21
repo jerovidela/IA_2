@@ -207,7 +207,7 @@ if __name__ == "__main__":
     print("\n" + "="*50)
     print("--- INICIANDO TEMPLE SIMULADO (MODO 1: INDIVIDUAL) ---")
     
-    orden_prueba = todas_las_ordenes[7].copy()
+    orden_prueba = todas_las_ordenes[9].copy()
     costo_inicial_m1 = calcular_costo_ruta_rapido(orden_prueba, matriz_cache)
     
     print(f"Ruta Inicial Aleatoria: {orden_prueba}")
