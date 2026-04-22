@@ -9,6 +9,7 @@ CONSTANTE_M = 2 # Masa del carro
 CONSTANTE_m = 1 # Masa de la pertiga
 CONSTANTE_l = 1 # Longitud dela pertiga
 CONSIGNA_POS = 0 #Dónde queremos que termine el carro [m]
+factor = 10 # Factor de truncamiento para limitar la cantidad de decimales y evitar problemas numéricos
 
 # CONTROLADOR INTERNO: el que busca estabilizar el péndulo
 # tiene como input al theta y theta prima y como output la fuerza, lo mismo que antes.
@@ -37,7 +38,7 @@ velocidad.f_hombro_der('MP', np.deg2rad(150),  np.deg2rad(300))
 
 # matriz FAM y centros de salida
 matriz_fam = np.array([[4,4,4,3,2], [4,4,3,2,1], [4,3,2,1,0], [3,2,1,0,0], [2,1,0,0,0]])
-centros_salida = np.array([100, 50, 0, -50, -100])
+centros_salida = np.array([50, 25, 0, -25, -50])
 
 # instanciado de ControladorDifuso
 controlador = ControladorDifuso(posicion, velocidad, matriz_fam, centros_salida)
@@ -147,6 +148,7 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
         
         # 4. Aplicamos el límite absoluto (saturación máxima de 150 N)
         fuerza_aplicada = np.clip(fuerza_aplicada, -100, 100)
+        fuerza_aplicada = np.trunc(fuerza_aplicada * factor) / factor
         
         # 5. Guardamos para el próximo ciclo
         fuerza_anterior = fuerza_aplicada
@@ -217,46 +219,67 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
         
         # Posicionar el texto fijo en la esquina de la pantalla
         texto_datos.set_position((0.02, 0.7))
-        texto_datos.set_text(f"Tiempo: {tiempo_actual:.2f} s\nÁngulo: {np.degrees(theta_actual):.6f}°\nPos. Carro: {x_actual:.1f} m\nFuerza: {fuerza_actual:.6f} N\nVel. Angular: {np.degrees(v_ang):.4f} °/s\nVel. Carro: {v_carro:.4f} m/s\n")
+        texto_datos.set_text(f"Tiempo: {tiempo_actual:.2f} s\nÁngulo: {np.degrees(theta_actual):.3f}°\nPos. Carro: {x_actual:.1f} m\nFuerza: {fuerza_actual:.3f} N\nVel. Angular: {np.degrees(v_ang):.2f} °/s\nVel. Carro: {v_carro:.2f} m/s\n")
 
         return barra, texto_datos, carro
 
     frames_totales = len(x_tiempo) // int(0.02 / delta_t)
     ani = FuncAnimation(fig_anim, update, frames=frames_totales, init_func=init, blit=False, interval=20, repeat=False)
-    plt.show()
-    fig_graf, ((ax_pos, ax_vel), (ax_force, ax_acc)) = plt.subplots(2, 2, figsize=(12, 8))
-    fig_graf.canvas.manager.set_window_title('Análisis Físico de la Simulación')
 
-    # Gráfico de Posiciones
-    ax_pos.plot(x_tiempo, np.rad2deg(historial_theta), label="θ (deg)", color='blue')
-    ax_pos.plot(x_tiempo, historial_x, label="x carro (m)", color='orange')
-    ax_pos.set_title("Posición")
-    ax_pos.set_xlabel("Tiempo (s)")
-    ax_pos.grid(True)
-    ax_pos.legend()
+    # =========================
+    # FIGURA 1: PÉNDULO (ANGULAR)
+    # =========================
+    fig_ang, axs_ang = plt.subplots(2, 2, figsize=(12, 8))
+    fig_ang.canvas.manager.set_window_title('Análisis Angular (Péndulo)')
 
-    # Gráfico de Velocidades
-    ax_vel.plot(x_tiempo, np.rad2deg(historial_vel_ang), label="ω (deg/s)", color='green')
-    ax_vel.plot(x_tiempo, historial_vel_carro, label="v carro (m/s)", color='red')
-    ax_vel.set_title("Velocidad")
-    ax_vel.set_xlabel("Tiempo (s)")
-    ax_vel.grid(True)
-    ax_vel.legend()
+    # Posición angular
+    axs_ang[0, 0].plot(x_tiempo, np.rad2deg(historial_theta))
+    axs_ang[0, 0].set_title("Posición Angular θ (deg)")
+    axs_ang[0, 0].grid(True)
 
-    # Gráfico de Fuerza
-    ax_force.plot(x_tiempo, historial_fuerza, label="F (N)", color='purple')
-    ax_force.set_title("Esfuerzo de Control (Fuerza Aplicada)")
-    ax_force.set_xlabel("Tiempo (s)")
-    ax_force.grid(True)
-    ax_force.legend()
+    # Velocidad angular
+    axs_ang[0, 1].plot(x_tiempo, np.rad2deg(historial_vel_ang))
+    axs_ang[0, 1].set_title("Velocidad Angular ω (deg/s)")
+    axs_ang[0, 1].grid(True)
 
-    # Gráfico de Aceleraciones
-    ax_acc.plot(x_tiempo, np.rad2deg(historial_acel_ang), label="α (deg/s²)", color='cyan')
-    ax_acc.plot(x_tiempo, historial_acel_carro, label="a carro (m/s²)", color='magenta')
-    ax_acc.set_title("Aceleración")
-    ax_acc.set_xlabel("Tiempo (s)")
-    ax_acc.grid(True)
-    ax_acc.legend()
+    # Aceleración angular
+    axs_ang[1, 0].plot(x_tiempo, np.rad2deg(historial_acel_ang))
+    axs_ang[1, 0].set_title("Aceleración Angular α (deg/s²)")
+    axs_ang[1, 0].grid(True)
+
+    # Fuerza (misma en ambos sistemas)
+    axs_ang[1, 1].plot(x_tiempo, historial_fuerza)
+    axs_ang[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_ang[1, 1].grid(True)
+
+    plt.tight_layout()
+
+
+    # =========================
+    # FIGURA 2: CARRO (LINEAL)
+    # =========================
+    fig_lin, axs_lin = plt.subplots(2, 2, figsize=(12, 8))
+    fig_lin.canvas.manager.set_window_title('Análisis Lineal (Carro)')
+
+    # Posición carro
+    axs_lin[0, 0].plot(x_tiempo, historial_x)
+    axs_lin[0, 0].set_title("Posición Carro x (m)")
+    axs_lin[0, 0].grid(True)
+
+    # Velocidad carro
+    axs_lin[0, 1].plot(x_tiempo, historial_vel_carro)
+    axs_lin[0, 1].set_title("Velocidad Carro v (m/s)")
+    axs_lin[0, 1].grid(True)
+
+    # Aceleración carro
+    axs_lin[1, 0].plot(x_tiempo, historial_acel_carro)
+    axs_lin[1, 0].set_title("Aceleración Carro a (m/s²)")
+    axs_lin[1, 0].grid(True)
+
+    # Fuerza (repetida para comparar)
+    axs_lin[1, 1].plot(x_tiempo, historial_fuerza)
+    axs_lin[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_lin[1, 1].grid(True)
 
     plt.tight_layout()
     plt.show()
@@ -292,4 +315,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 # graficar_funciones_pertenencia()
-simular_animado(60, 0.01, 180, 0, 0)
+simular_animado(60, 0.01, 80, 0, 0)
