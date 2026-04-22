@@ -106,7 +106,7 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
     # Definimos cuánto puede variar la fuerza (ej: 5000 N/s). 
     # Lo subí un poco respecto al ejemplo anterior porque con un delta_t de 0.001 
     # el motor necesita reaccionar razonablemente rápido para que el péndulo no se caiga.
-    max_variacion_fuerza = 500.0 * delta_t 
+    max_variacion_fuerza = 1000.0 * delta_t 
     # -----------------------------------------------------------------
 
     # 1. Simulación matemática completa
@@ -292,4 +292,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 # graficar_funciones_pertenencia()
-simular_animado(60, 0.01, 180, 0, 0)
+simular_animado(30, 0.01, 80, 0, 0)

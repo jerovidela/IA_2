@@ -11,7 +11,7 @@ CONSTANTE_l = 1 # Longitud dela pertiga
 # instanciado de variables lingüísticas de entrada
 
 # 1. POSICIÓN [rad]
-lim_pos_grad = 90 
+lim_pos_grad = 45 
 lim_pos_rad = np.deg2rad(lim_pos_grad)
 posicion = VariableBorrosa(-lim_pos_rad, lim_pos_rad, 2000)
 
