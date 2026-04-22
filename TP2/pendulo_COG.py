@@ -12,7 +12,7 @@ CONSTANTE_l = 1 # Longitud dela pertiga
 
 # instanciado de variables lingüísticas de entrada
 # posicion [rad]
-lim_pos_grad = 180  #En grados
+lim_pos_grad = 45 #En grados
 lim_pos_rad = np.deg2rad(lim_pos_grad) #Convertido a radianes
 posicion = VariableBorrosa(-lim_pos_rad, lim_pos_rad, 2000)
 

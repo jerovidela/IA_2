@@ -10,7 +10,7 @@ CONSTANTE_l = 1 # Longitud dela pertiga
 
 # instanciado de variables lingüísticas de entrada
 # posicion [rad]
-lim_pos_grad = 180  #En grados
+lim_pos_grad = 45  #En grados
 lim_pos_rad = np.deg2rad(lim_pos_grad) #Convertido a radianes
 posicion = VariableBorrosa(-lim_pos_rad, lim_pos_rad, 2000)
 
@@ -71,8 +71,8 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 #Inicializamos la memoria del motor antes del bucle ---
     fuerza_anterior = 0.0
     # el motor necesita reaccionar razonablemente rápido para que el péndulo no se caiga.
-    #max_variacion_fuerza = 500.0 * delta_t
-    max_variacion_fuerza = 1000000 
+    max_variacion_fuerza = 1000.0 * delta_t
+    #max_variacion_fuerza = 1000000 
     # -----------------------------------------------------------------
 
     # 1. Simulación matemática completa
