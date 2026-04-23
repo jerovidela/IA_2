@@ -37,7 +37,7 @@ velocidad.f_triangular('PP', np.deg2rad(0),    np.deg2rad(150),  np.deg2rad(300)
 velocidad.f_hombro_der('MP', np.deg2rad(150),  np.deg2rad(300))
 
 # matriz FAM y centros de salida
-matriz_fam = np.array([[4,4,4,3,2], [4,4,3,2,1], [4,3,2,1,0], [3,2,1,0,0], [2,1,0,0,0]])
+matriz_fam = np.array([[4,4,4,3,2], [4,4,3,2,1], [3,3,2,1,1], [3,2,1,0,0], [2,1,0,0,0]])
 centros_salida = np.array([50, 25, 0, -25, -50])
 
 # instanciado de ControladorDifuso
@@ -102,7 +102,7 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
     historial_acel_carro = []
     x_tiempo = np.arange(0, t_max, delta_t)
     
-# --- NUEVO: Inicializamos la memoria del motor antes del bucle ---
+# Inicializamos la memoria del motor antes del bucle ---
     fuerza_anterior = 0.0
     # Definimos cuánto puede variar la fuerza (ej: 5000 N/s). 
     # Lo subí un poco respecto al ejemplo anterior porque con un delta_t de 0.001 
@@ -112,29 +112,29 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 
     # 1. Simulación matemática completa
     for t in x_tiempo:
-        if abs(theta) > np.deg2rad(179) and abs(v_ang) < 0.5:   #Ojo con esto que le pusimos. no es controlador difuso. Solo esta para sacarlo de la quietud de la indeterminación de los 180°
-            fuerza_deseada = 100.0
+        #if abs(theta) > np.deg2rad(179) and abs(v_ang) < 0.5:   #Ojo con esto que le pusimos. no es controlador difuso. Solo esta para sacarlo de la quietud de la indeterminación de los 180°
+            #fuerza_deseada = 100.0
             
-        else:
-            error_x_carro = x_carro - CONSIGNA_POS
-            # 1. El controlador externo mira la pista y pide una inclinación (ej: -8 grados)
-            #Este es el ángulo que necesita inclinar al péndulo para mover el carro a la posición del carro deseada
-            #El ángulo se mide desde la vertical hacia arriba igual que antes.
-            theta_ref_crudo = controlador_ext.inferir(error_x_carro, v_carro)
-            
-            # 2. El Saturador de Seguridad (por si acaso, aunque los centros ya lo limitan)
-            theta_ref = np.clip(theta_ref_crudo, np.deg2rad(-10), np.deg2rad(10))
-            #No vamos a dejar que el ángulo de inclinación del péndulo sea mayor que -+10°.
-            #En realidad la lógica difusa ya lo devuelve en esos límites, pero por las dudas acotamos nuevamente
-            
-            # 3. El gran truco: "El Engaño"
-            # Calculamos el error. Si theta=0 y nos piden theta_ref=-10, el error es +10.
-            # El controlador interno va a creer que el péndulo se está cayendo a +10 grados.
-            error_theta = theta - theta_ref
-            
-            # 4. El Malabarista hace equilibrio basado en esa mentira
-            # (OJO: acá usamos el nombre de la instancia original, que se llama 'controlador')
-            fuerza_deseada = controlador.inferir(error_theta, v_ang)
+        #else:
+        error_x_carro = x_carro - CONSIGNA_POS
+        # 1. El controlador externo mira la pista y pide una inclinación (ej: -8 grados)
+        #Este es el ángulo que necesita inclinar al péndulo para mover el carro a la posición del carro deseada
+        #El ángulo se mide desde la vertical hacia arriba igual que antes.
+        theta_ref_crudo = controlador_ext.inferir(error_x_carro, v_carro)
+        
+        # 2. El Saturador de Seguridad (por si acaso, aunque los centros ya lo limitan)
+        theta_ref = np.clip(theta_ref_crudo, np.deg2rad(-10), np.deg2rad(10))
+        #No vamos a dejar que el ángulo de inclinación del péndulo sea mayor que -+10°.
+        #En realidad la lógica difusa ya lo devuelve en esos límites, pero por las dudas acotamos nuevamente
+        
+        # 3. El gran truco: "El Engaño"
+        # Calculamos el error. Si theta=0 y nos piden theta_ref=-10, el error es +10.
+        # El controlador interno va a creer que el péndulo se está cayendo a +10 grados.
+        error_theta = theta - theta_ref
+        
+        # 4. El Malabarista hace equilibrio basado en esa mentira
+        # (OJO: acá usamos el nombre de la instancia original, que se llama 'controlador')
+        fuerza_deseada = controlador.inferir(error_theta, v_ang)
         
         # --- NUEVO: Aplicamos los límites físicos del motor ---
         # 1. Calculamos cuánto nos pide saltar el controlador
@@ -233,27 +233,26 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
     fig_ang.canvas.manager.set_window_title('Análisis Angular (Péndulo)')
 
     # Posición angular
-    axs_ang[0, 0].plot(x_tiempo, np.rad2deg(historial_theta))
+    axs_ang[0, 0].plot(x_tiempo, np.rad2deg(historial_theta), color='blue', linewidth=1.5)
     axs_ang[0, 0].set_title("Posición Angular θ (deg)")
-    axs_ang[0, 0].grid(True)
+    axs_ang[0, 0].grid(True, linestyle='--', alpha=0.7)
 
     # Velocidad angular
-    axs_ang[0, 1].plot(x_tiempo, np.rad2deg(historial_vel_ang))
+    axs_ang[0, 1].plot(x_tiempo, np.rad2deg(historial_vel_ang), color='green', linewidth=1.5)
     axs_ang[0, 1].set_title("Velocidad Angular ω (deg/s)")
-    axs_ang[0, 1].grid(True)
+    axs_ang[0, 1].grid(True, linestyle='--', alpha=0.7)
 
     # Aceleración angular
-    axs_ang[1, 0].plot(x_tiempo, np.rad2deg(historial_acel_ang))
+    axs_ang[1, 0].plot(x_tiempo, np.rad2deg(historial_acel_ang), color='cyan', linewidth=1.5)
     axs_ang[1, 0].set_title("Aceleración Angular α (deg/s²)")
-    axs_ang[1, 0].grid(True)
+    axs_ang[1, 0].grid(True, linestyle='--', alpha=0.7)
 
     # Fuerza (misma en ambos sistemas)
-    axs_ang[1, 1].plot(x_tiempo, historial_fuerza)
+    axs_ang[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
     axs_ang[1, 1].set_title("Fuerza Aplicada (N)")
-    axs_ang[1, 1].grid(True)
+    axs_ang[1, 1].grid(True, linestyle='--', alpha=0.7)
 
     plt.tight_layout()
-
 
     # =========================
     # FIGURA 2: CARRO (LINEAL)
@@ -262,24 +261,25 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
     fig_lin.canvas.manager.set_window_title('Análisis Lineal (Carro)')
 
     # Posición carro
-    axs_lin[0, 0].plot(x_tiempo, historial_x)
+    axs_lin[0, 0].plot(x_tiempo, historial_x, color='orange', linewidth=1.5)
     axs_lin[0, 0].set_title("Posición Carro x (m)")
-    axs_lin[0, 0].grid(True)
+    axs_lin[0, 0].grid(True, linestyle='--', alpha=0.7)
+    axs_lin[0, 0].legend()
 
     # Velocidad carro
-    axs_lin[0, 1].plot(x_tiempo, historial_vel_carro)
+    axs_lin[0, 1].plot(x_tiempo, historial_vel_carro, color='red', linewidth=1.5)
     axs_lin[0, 1].set_title("Velocidad Carro v (m/s)")
-    axs_lin[0, 1].grid(True)
+    axs_lin[0, 1].grid(True, linestyle='--', alpha=0.7)
 
     # Aceleración carro
-    axs_lin[1, 0].plot(x_tiempo, historial_acel_carro)
+    axs_lin[1, 0].plot(x_tiempo, historial_acel_carro, color='magenta', linewidth=1.5)
     axs_lin[1, 0].set_title("Aceleración Carro a (m/s²)")
-    axs_lin[1, 0].grid(True)
+    axs_lin[1, 0].grid(True, linestyle='--', alpha=0.7)
 
     # Fuerza (repetida para comparar)
-    axs_lin[1, 1].plot(x_tiempo, historial_fuerza)
+    axs_lin[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
     axs_lin[1, 1].set_title("Fuerza Aplicada (N)")
-    axs_lin[1, 1].grid(True)
+    axs_lin[1, 1].grid(True, linestyle='--', alpha=0.7)
 
     plt.tight_layout()
     plt.show()
@@ -315,4 +315,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 # graficar_funciones_pertenencia()
-simular_animado(60, 0.01, 180, 0, 0)
+simular_animado(60, 0.01, 80, 0, 0)

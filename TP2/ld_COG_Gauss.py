@@ -30,6 +30,16 @@ class VariableBorrosa():
 
             variable_entrada[conjunto_borroso] = grado_pertenencia 
         return variable_entrada
+    # ==========================================
+    # NUEVO: Hombros Suaves (Splines Z y S)
+    # ==========================================
+    def f_hombro_suave_izq(self, conjunto_borroso, a, b):
+        # Función Z: 1.0 a la izquierda de 'a', cae a 0.0 al llegar a 'b'
+        self.conjuntos[conjunto_borroso] = fuzz.zmf(self.universo, a, b)
+
+    def f_hombro_suave_der(self, conjunto_borroso, a, b):
+        # Función S: 0.0 a la izquierda de 'a', sube a 1.0 al llegar a 'b'
+        self.conjuntos[conjunto_borroso] = fuzz.smf(self.universo, a, b)
 
 class ControladorDifuso():
     def __init__(self, var_posicion, var_velocidad, var_salida, matriz_fam):

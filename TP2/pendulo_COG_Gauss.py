@@ -11,7 +11,7 @@ CONSTANTE_l = 1 # Longitud dela pertiga
 # instanciado de variables lingüísticas de entrada
 
 # 1. POSICIÓN [rad]
-lim_pos_grad = 45 
+lim_pos_grad = 180
 lim_pos_rad = np.deg2rad(lim_pos_grad)
 posicion = VariableBorrosa(-lim_pos_rad, lim_pos_rad, 2000)
 
@@ -21,7 +21,9 @@ posicion.f_gaussiana('MN', np.deg2rad(-45), sigma_pos)
 posicion.f_gaussiana('PN', np.deg2rad(-22.5), sigma_pos)
 posicion.f_gaussiana('Z',  np.deg2rad(0), sigma_pos)
 posicion.f_gaussiana('PP', np.deg2rad(22.5), sigma_pos)
-posicion.f_gaussiana('MP', np.deg2rad(45), sigma_pos)
+
+# Extremo derecho suave (Hombro S)
+posicion.f_hombro_suave_der('MP', np.deg2rad(22.5), np.deg2rad(45))
 
 # 2. VELOCIDAD [rad/s]
 lim_vel_grados = 300 
@@ -37,14 +39,14 @@ velocidad.f_gaussiana('PP', np.deg2rad(150), sigma_vel)
 velocidad.f_gaussiana('MP', np.deg2rad(300), sigma_vel)
 
 # matriz FAM
-matriz_fam = np.array([[4,4,4,3,2], [4,4,3,2,1], [4,3,2,1,0], [3,2,1,0,0], [2,1,0,0,0]])
+matriz_fam = np.array([[4,4,4,3,2], [4,4,3,2,1], [3,3,2,1,1], [3,2,1,0,0], [2,1,0,0,0]])
 
 # 3. SALIDA: FUERZA APLICADA [N]
-lim_fuerza = 150 
+lim_fuerza = 50 
 fuerza = VariableBorrosa(-lim_fuerza, lim_fuerza, 2000)
 
 # Sigma de 20 Newtons
-sigma_fuerza = 20.0
+sigma_fuerza = 10.0
 fuerza.f_gaussiana('MN', -100, sigma_fuerza)
 fuerza.f_gaussiana('PN', -50, sigma_fuerza)
 fuerza.f_gaussiana('Z',  0, sigma_fuerza)
@@ -86,17 +88,14 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 # Inicializamos la memoria del motor antes del bucle ---
     fuerza_anterior = 0.0
     # el motor necesita reaccionar razonablemente rápido para que el péndulo no se caiga.
-    #max_variacion_fuerza = 500.0 * delta_t 
-    max_variacion_fuerza = 1000000
+    max_variacion_fuerza = 2000.0 * delta_t
+    #max_variacion_fuerza = 2000.0 * delta_t
     # -----------------------------------------------------------------
 
     # 1. Simulación matemática completa
     for t in x_tiempo:
-        if abs(theta) > np.deg2rad(179) and abs(v_ang) < 0.5:   #Ojo con esto que le pusimos. no es controlador difuso. Solo esta para sacarlo de la quietud de la indeterminación de los 180°
-            fuerza_deseada = 100.0
-            
-        else:
-            fuerza_deseada = controlador.inferir(theta, v_ang)
+ 
+        fuerza_deseada = controlador.inferir(theta, v_ang)
         
         # Aplicamos los límites físicos del motor ---
         # 1. Calculamos cuánto nos pide saltar el controlador
@@ -186,40 +185,60 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 
     frames_totales = len(x_tiempo) // int(0.02 / delta_t)
     ani = FuncAnimation(fig_anim, update, frames=frames_totales, init_func=init, blit=False, interval=20, repeat=False)
-    plt.show()
-    fig_graf, ((ax_pos, ax_vel), (ax_force, ax_acc)) = plt.subplots(2, 2, figsize=(12, 8))
-    fig_graf.canvas.manager.set_window_title('Análisis Físico de la Simulación')
+     # =========================
+    # FIGURA 1: PÉNDULO (ANGULAR)
+    # =========================
+    fig_ang, axs_ang = plt.subplots(2, 2, figsize=(12, 8))
+    fig_ang.canvas.manager.set_window_title('Análisis Angular (Péndulo)')
 
-    # Gráfico de Posiciones
-    ax_pos.plot(x_tiempo, np.rad2deg(historial_theta), label="θ (deg)", color='blue')
-    ax_pos.plot(x_tiempo, historial_x, label="x carro (m)", color='orange')
-    ax_pos.set_title("Posición")
-    ax_pos.set_xlabel("Tiempo (s)")
-    ax_pos.grid(True)
-    ax_pos.legend()
+    # Posición angular
+    axs_ang[0, 0].plot(x_tiempo, np.rad2deg(historial_theta), color='blue', linewidth=1.5)
+    axs_ang[0, 0].set_title("Posición Angular θ (deg)")
+    axs_ang[0, 0].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Velocidades
-    ax_vel.plot(x_tiempo, np.rad2deg(historial_vel_ang), label="ω (deg/s)", color='green')
-    ax_vel.plot(x_tiempo, historial_vel_carro, label="v carro (m/s)", color='red')
-    ax_vel.set_title("Velocidad")
-    ax_vel.set_xlabel("Tiempo (s)")
-    ax_vel.grid(True)
-    ax_vel.legend()
+    # Velocidad angular
+    axs_ang[0, 1].plot(x_tiempo, np.rad2deg(historial_vel_ang), color='green', linewidth=1.5)
+    axs_ang[0, 1].set_title("Velocidad Angular ω (deg/s)")
+    axs_ang[0, 1].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Fuerza
-    ax_force.plot(x_tiempo, historial_fuerza, label="F (N)", color='purple')
-    ax_force.set_title("Esfuerzo de Control (Fuerza Aplicada)")
-    ax_force.set_xlabel("Tiempo (s)")
-    ax_force.grid(True)
-    ax_force.legend()
+    # Aceleración angular
+    axs_ang[1, 0].plot(x_tiempo, np.rad2deg(historial_acel_ang), color='cyan', linewidth=1.5)
+    axs_ang[1, 0].set_title("Aceleración Angular α (deg/s²)")
+    axs_ang[1, 0].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Aceleraciones
-    ax_acc.plot(x_tiempo, np.rad2deg(historial_acel_ang), label="α (deg/s²)", color='cyan')
-    ax_acc.plot(x_tiempo, historial_acel_carro, label="a carro (m/s²)", color='magenta')
-    ax_acc.set_title("Aceleración")
-    ax_acc.set_xlabel("Tiempo (s)")
-    ax_acc.grid(True)
-    ax_acc.legend()
+    # Fuerza (misma en ambos sistemas)
+    axs_ang[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
+    axs_ang[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_ang[1, 1].grid(True, linestyle='--', alpha=0.7)
+
+    plt.tight_layout()
+
+    # =========================
+    # FIGURA 2: CARRO (LINEAL)
+    # =========================
+    fig_lin, axs_lin = plt.subplots(2, 2, figsize=(12, 8))
+    fig_lin.canvas.manager.set_window_title('Análisis Lineal (Carro)')
+
+    # Posición carro
+    axs_lin[0, 0].plot(x_tiempo, historial_x, color='orange', linewidth=1.5)
+    axs_lin[0, 0].set_title("Posición Carro x (m)")
+    axs_lin[0, 0].grid(True, linestyle='--', alpha=0.7)
+    axs_lin[0, 0].legend()
+
+    # Velocidad carro
+    axs_lin[0, 1].plot(x_tiempo, historial_vel_carro, color='red', linewidth=1.5)
+    axs_lin[0, 1].set_title("Velocidad Carro v (m/s)")
+    axs_lin[0, 1].grid(True, linestyle='--', alpha=0.7)
+
+    # Aceleración carro
+    axs_lin[1, 0].plot(x_tiempo, historial_acel_carro, color='magenta', linewidth=1.5)
+    axs_lin[1, 0].set_title("Aceleración Carro a (m/s²)")
+    axs_lin[1, 0].grid(True, linestyle='--', alpha=0.7)
+
+    # Fuerza (repetida para comparar)
+    axs_lin[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
+    axs_lin[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_lin[1, 1].grid(True, linestyle='--', alpha=0.7)
 
     plt.tight_layout()
     plt.show()
@@ -255,4 +274,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 graficar_funciones_pertenencia()
-simular_animado(10, 0.01, 180, 0, 0)
+simular_animado(15, 0.01, 89, 0, 0)
