@@ -17,13 +17,14 @@ posicion = VariableBorrosa(-lim_pos_rad, lim_pos_rad, 2000)
 
 # Sigma de ~10 grados para un buen solapamiento
 sigma_pos = np.deg2rad(10) 
-posicion.f_gaussiana('MN', np.deg2rad(-45), sigma_pos)
+# posicion.f_gaussiana('MN', np.deg2rad(-45), sigma_pos)
 posicion.f_gaussiana('PN', np.deg2rad(-22.5), sigma_pos)
 posicion.f_gaussiana('Z',  np.deg2rad(0), sigma_pos)
 posicion.f_gaussiana('PP', np.deg2rad(22.5), sigma_pos)
 
 # Extremo derecho suave (Hombro S)
 posicion.f_hombro_suave_der('MP', np.deg2rad(22.5), np.deg2rad(45))
+posicion.f_hombro_suave_izq('MN', np.deg2rad(-45), np.deg2rad(-22.5))
 
 # 2. VELOCIDAD [rad/s]
 lim_vel_grados = 300 
@@ -88,7 +89,7 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 # Inicializamos la memoria del motor antes del bucle ---
     fuerza_anterior = 0.0
     # el motor necesita reaccionar razonablemente rápido para que el péndulo no se caiga.
-    max_variacion_fuerza = 2000.0 * delta_t
+    max_variacion_fuerza = 1000.0 * delta_t
     #max_variacion_fuerza = 2000.0 * delta_t
     # -----------------------------------------------------------------
 
@@ -274,4 +275,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 graficar_funciones_pertenencia()
-simular_animado(15, 0.01, 89, 0, 0)
+simular_animado(15, 0.01, 80, 0, 0)

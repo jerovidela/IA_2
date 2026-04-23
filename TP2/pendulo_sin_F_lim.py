@@ -221,4 +221,4 @@ def graficar_funciones_pertenencia():
 
 # EJECUCIÓN
 graficar_funciones_pertenencia()
-simular_animado(10, 0.01, 180, 0, 0)
+simular_animado(10, 0.01, 80, 0, 0)
