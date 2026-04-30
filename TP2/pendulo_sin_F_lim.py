@@ -149,43 +149,60 @@ def simular_animado(t_max, delta_t, theta_0, v_0, a_0):
 
     frames_totales = len(x_tiempo) // int(0.02 / delta_t)
     ani = FuncAnimation(fig_anim, update, frames=frames_totales, init_func=init, blit=False, interval=20, repeat=False)
-    plt.show()
-# ==========================================
-    # 3. Mostrar GRÁFICOS ESTÁTICOS al finalizar
-    # ==========================================
-    fig_graf, ((ax_pos, ax_vel), (ax_force, ax_acc)) = plt.subplots(2, 2, figsize=(12, 8))
-    fig_graf.canvas.manager.set_window_title('Análisis Físico de la Simulación')
+# =========================
+    # FIGURA 1: PÉNDULO (ANGULAR)
+    # =========================
+    fig_ang, axs_ang = plt.subplots(2, 2, figsize=(12, 8))
+    fig_ang.canvas.manager.set_window_title('Análisis Angular (Péndulo)')
 
-    # Gráfico de Posiciones
-    ax_pos.plot(x_tiempo, np.rad2deg(historial_theta), label="θ (deg)", color='blue')
-    ax_pos.plot(x_tiempo, historial_x, label="x carro (m)", color='orange')
-    ax_pos.set_title("Posición")
-    ax_pos.set_xlabel("Tiempo (s)")
-    ax_pos.grid(True)
-    ax_pos.legend()
+    # Posición angular
+    axs_ang[0, 0].plot(x_tiempo, np.rad2deg(historial_theta), color='blue', linewidth=1.5)
+    axs_ang[0, 0].set_title("Posición Angular θ (deg)")
+    axs_ang[0, 0].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Velocidades
-    ax_vel.plot(x_tiempo, np.rad2deg(historial_vel_ang), label="ω (deg/s)", color='green')
-    ax_vel.plot(x_tiempo, historial_vel_carro, label="v carro (m/s)", color='red')
-    ax_vel.set_title("Velocidad")
-    ax_vel.set_xlabel("Tiempo (s)")
-    ax_vel.grid(True)
-    ax_vel.legend()
+    # Velocidad angular
+    axs_ang[0, 1].plot(x_tiempo, np.rad2deg(historial_vel_ang), color='green', linewidth=1.5)
+    axs_ang[0, 1].set_title("Velocidad Angular ω (deg/s)")
+    axs_ang[0, 1].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Fuerza
-    ax_force.plot(x_tiempo, historial_fuerza, label="F (N)", color='purple')
-    ax_force.set_title("Esfuerzo de Control (Fuerza Aplicada)")
-    ax_force.set_xlabel("Tiempo (s)")
-    ax_force.grid(True)
-    ax_force.legend()
+    # Aceleración angular
+    axs_ang[1, 0].plot(x_tiempo, np.rad2deg(historial_acel_ang), color='cyan', linewidth=1.5)
+    axs_ang[1, 0].set_title("Aceleración Angular α (deg/s²)")
+    axs_ang[1, 0].grid(True, linestyle='--', alpha=0.7)
 
-    # Gráfico de Aceleraciones
-    ax_acc.plot(x_tiempo, np.rad2deg(historial_acel_ang), label="α (deg/s²)", color='cyan')
-    ax_acc.plot(x_tiempo, historial_acel_carro, label="a carro (m/s²)", color='magenta')
-    ax_acc.set_title("Aceleración")
-    ax_acc.set_xlabel("Tiempo (s)")
-    ax_acc.grid(True)
-    ax_acc.legend()
+    # Fuerza (misma en ambos sistemas)
+    axs_ang[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
+    axs_ang[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_ang[1, 1].grid(True, linestyle='--', alpha=0.7)
+
+    plt.tight_layout()
+
+    # =========================
+    # FIGURA 2: CARRO (LINEAL)
+    # =========================
+    fig_lin, axs_lin = plt.subplots(2, 2, figsize=(12, 8))
+    fig_lin.canvas.manager.set_window_title('Análisis Lineal (Carro)')
+
+    # Posición carro
+    axs_lin[0, 0].plot(x_tiempo, historial_x, color='orange', linewidth=1.5)
+    axs_lin[0, 0].set_title("Posición Carro x (m)")
+    axs_lin[0, 0].grid(True, linestyle='--', alpha=0.7)
+    axs_lin[0, 0].legend()
+
+    # Velocidad carro
+    axs_lin[0, 1].plot(x_tiempo, historial_vel_carro, color='red', linewidth=1.5)
+    axs_lin[0, 1].set_title("Velocidad Carro v (m/s)")
+    axs_lin[0, 1].grid(True, linestyle='--', alpha=0.7)
+
+    # Aceleración carro
+    axs_lin[1, 0].plot(x_tiempo, historial_acel_carro, color='magenta', linewidth=1.5)
+    axs_lin[1, 0].set_title("Aceleración Carro a (m/s²)")
+    axs_lin[1, 0].grid(True, linestyle='--', alpha=0.7)
+
+    # Fuerza (repetida para comparar)
+    axs_lin[1, 1].plot(x_tiempo, historial_fuerza, color='purple', linewidth=1.5)
+    axs_lin[1, 1].set_title("Fuerza Aplicada (N)")
+    axs_lin[1, 1].grid(True, linestyle='--', alpha=0.7)
 
     plt.tight_layout()
     plt.show()
