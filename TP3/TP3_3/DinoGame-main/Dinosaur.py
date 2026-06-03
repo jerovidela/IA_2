@@ -102,7 +102,7 @@ class Dinosaur(NeuralNetwork):
                 self.dino_duck = True
                 self.dino_run = False
                 self.dino_jump = False
-            elif not (self.dino_jump or userInput == "DUCK"):
+            elif userInput == "RUN":
                 self.dino_duck = False
                 self.dino_run = True
                 self.dino_jump = False

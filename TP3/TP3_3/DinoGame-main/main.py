@@ -68,7 +68,7 @@ def populate(population_size):
 
 
 # ======================== SELECT THE POPULATION NUMBER PLAYING AT THE SAME TIME ======================
-population_number = 100
+population_number = 1000
 # =====================================================================================================
 population = populate(population_number)
 player = Dinosaur(0)
@@ -260,12 +260,12 @@ def gameScreen():
                     # 4. Empaquetar las 6 entradas (el orden debe coincidir con NeuralNetwork.py)
                     # 4. Empaquetar las 6 entradas NORMALIZADAS
                     inputs = [
-                        v_game / 50.0,                 # Velocidad max aprox
-                        y_obst / SCREEN_HEIGHT, 
-                        h_obst / 100.0,                # Altura max aprox
-                        w_obst / 100.0,                # Ancho max aprox
-                        dist / SCREEN_WIDTH,           # Distancia max
-                        y_dino / SCREEN_HEIGHT
+                        v_game,                 # Velocidad max aprox
+                        y_obst, 
+                        h_obst,                # Altura max aprox
+                        w_obst,                # Ancho max aprox
+                        dist,           # Distancia max
+                        y_dino
                     ]
                     
                     # 5. Ejecutar el cerebro y actualizar las físicas UNA sola vez por frame
@@ -387,13 +387,14 @@ def menu():
                 if generation == 1:
                     key_pressed = pygame.key.name(event.key)
                     if key_pressed == 'e':
-                        if os.path.isfile('saved_brains.npz'):
-                            loaded_brains = np.load('saved_brains.npz')
+                        if os.path.isfile('best_brain.npz'):
+                            loaded_brains = np.load('best_brain.npz')
                             player.W1 = loaded_brains['W1'][0]
                             player.b1 = loaded_brains['b1'][0]
                             player.W2 = loaded_brains['W2'][0]
                             player.b2 = loaded_brains['b2'][0]
                             playMode = 'e'
+                            player.autoPlay = True
                             population = []
                             gameScreen()
                         else:

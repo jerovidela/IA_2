@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 def plot_evolution_data():
-    file_path = 'evolution_metrics_20260517_225138.csv'
+    file_path = 'evolution_metrics_20260602_172027.csv'
     
     if not os.path.isfile(file_path):
         print(f"Error: El archivo '{file_path}' no existe. Ejecute primero el simulador para generar datos.")

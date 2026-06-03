@@ -3,7 +3,7 @@ import numpy as np
 from Dinosaur import Dinosaur
 
 class GeneticAlgorithm:
-    def __init__(self, mutation_rate=0.1, elitism_count=5, tournament_size=3):
+    def __init__(self, mutation_rate=0.05, elitism_count=15, tournament_size=3):
         self.mutation_rate = mutation_rate
         self.elitism_count = elitism_count
         self.tournament_size = tournament_size
@@ -14,7 +14,7 @@ class GeneticAlgorithm:
         
         new_population = []
         
-        # 2. Elitismo: Conservar a los 5 mejores intactos
+        # 2. Elitismo: Conservar a los 15 mejores intactos
         for i in range(self.elitism_count):
             # Clonamos al dinosaurio para no mantener referencias a objetos "muertos"
             elite_dino = Dinosaur(sorted_pop[i].id, sorted_pop[i].color, autoplay=True)
@@ -28,10 +28,8 @@ class GeneticAlgorithm:
             
         # 3. Cruzamiento y Mutación para los 95 restantes
         for i in range(self.elitism_count, len(old_population)):
-            parent1 = self.select_fittest(sorted_pop)
-            
-            # --- INICIO DEL CÓDIGO A AGREGAR / REEMPLAZAR ---
-            parent2 = self.select_fittest(sorted_pop) # Seleccionamos un segundo padre
+            parent1 = self.select_top_parent(sorted_pop, top_ratio=0.20)
+            parent2 = self.select_top_parent(sorted_pop, top_ratio=0.35)
             
             # Crear el hijo
             child_dino = Dinosaur(old_population[i].id, old_population[i].color, autoplay=True)
@@ -74,6 +72,13 @@ class GeneticAlgorithm:
         tournament = random.sample(population, self.tournament_size)
         winner = max(tournament, key=lambda x: x.score)
         return winner
+
+    def select_top_parent(self, sorted_population, top_ratio=0.25):
+        """Selecciona un padre con sesgo hacia los mejores individuos."""
+        top_count = max(2, int(len(sorted_population) * top_ratio))
+        top_candidates = sorted_population[:top_count]
+        weights = [top_count - i for i in range(top_count)]
+        return random.choices(top_candidates, weights=weights, k=1)[0]
 
 
     def mutate(self, child):
